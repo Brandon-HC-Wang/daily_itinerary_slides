@@ -1081,14 +1081,21 @@
         </div>
       </div>
       <div class="top-actions">
-        <button class="btn" id="syncBtn" type="button" title="同步地點總表與時段描述">
+        <button class="btn" id="uploadBtn" type="button" title="上傳本機地點總表與時段描述">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 0 1-15.5 6.3"></path>
-            <path d="M3 12a9 9 0 0 1 15.5-6.3"></path>
-            <path d="M16 5h3V2"></path>
-            <path d="M8 19H5v3"></path>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <path d="M17 8l-5-5-5 5"></path>
+            <path d="M12 3v12"></path>
           </svg>
-          同步資料
+          上傳資料
+        </button>
+        <button class="btn" id="downloadBtn" type="button" title="下載雲端地點總表與時段描述">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <path d="M7 10l5 5 5-5"></path>
+            <path d="M12 15V3"></path>
+          </svg>
+          下載資料
         </button>
         <button class="btn" id="resetBtn" type="button" title="還原成 Excel 初始內容">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1449,7 +1456,8 @@
     const track = document.getElementById("track");
     const tabs = Array.from(document.querySelectorAll(".tab"));
     const dots = Array.from(document.querySelectorAll(".dot"));
-    const syncBtn = document.getElementById("syncBtn");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
     const saveState = document.getElementById("saveState");
     const toast = document.getElementById("toast");
     const mapPreview = document.getElementById("mapPreview");
@@ -1959,37 +1967,58 @@
       mergeRemoteSlots(data || []);
     }
 
-    async function syncSharedData() {
+    function setActionButtonLoading(button, label) {
+      button.dataset.originalHtml = button.innerHTML;
+      button.disabled = true;
+      button.textContent = label;
+    }
+
+    function restoreActionButton(button) {
+      button.disabled = false;
+      button.innerHTML = button.dataset.originalHtml;
+      delete button.dataset.originalHtml;
+    }
+
+    async function uploadSharedData() {
       if (!supabaseClient) {
-        showToast("同步功能需要網路連線");
+        showToast("上傳功能需要網路連線");
         return;
       }
-      syncBtn.disabled = true;
-      syncBtn.textContent = "同步中";
+      setActionButtonLoading(uploadBtn, "上傳中");
       try {
         await pushLocalPlaces();
         await pushDirtySlots();
+        dirtySlots = {};
+        saveStateToStorage();
+        renderPlaceLibrary();
+        showToast("上傳完成");
+      } catch (error) {
+        console.error(error);
+        showToast(`上傳失敗：${error.message || "請稍後再試"}`);
+      } finally {
+        restoreActionButton(uploadBtn);
+      }
+    }
+
+    async function downloadSharedData() {
+      if (!supabaseClient) {
+        showToast("下載功能需要網路連線");
+        return;
+      }
+      setActionButtonLoading(downloadBtn, "下載中");
+      try {
         await pullRemotePlaces();
         await pullRemoteSlots();
         dirtySlots = {};
         saveStateToStorage();
         renderSlots();
         renderPlaceLibrary();
-        showToast("同步完成");
+        showToast("下載完成");
       } catch (error) {
         console.error(error);
-        showToast(`同步失敗：${error.message || "請稍後再試"}`);
+        showToast(`下載失敗：${error.message || "請稍後再試"}`);
       } finally {
-        syncBtn.disabled = false;
-        syncBtn.innerHTML = `
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 0 1-15.5 6.3"></path>
-            <path d="M3 12a9 9 0 0 1 15.5-6.3"></path>
-            <path d="M16 5h3V2"></path>
-            <path d="M8 19H5v3"></path>
-          </svg>
-          同步資料
-        `;
+        restoreActionButton(downloadBtn);
       }
     }
 
@@ -2087,7 +2116,8 @@
     document.getElementById("nextBtn").addEventListener("click", () => goToSlide(currentIndex + 1));
     document.getElementById("exportBtn").addEventListener("click", exportJson);
     document.getElementById("resetBtn").addEventListener("click", resetToInitial);
-    syncBtn.addEventListener("click", syncSharedData);
+    uploadBtn.addEventListener("click", uploadSharedData);
+    downloadBtn.addEventListener("click", downloadSharedData);
     newPlaceName.addEventListener("input", () => {
       openMapsSearch.href = mapsSearchUrl(newPlaceName.value.trim());
     });

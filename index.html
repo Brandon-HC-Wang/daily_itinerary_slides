@@ -380,10 +380,6 @@
     }
 
     .slide-header {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: start;
       margin-bottom: 20px;
     }
 
@@ -411,34 +407,6 @@
       margin: 8px 0 0;
       color: var(--muted);
       line-height: 1.65;
-    }
-
-    .day-meta {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(90px, 1fr));
-      gap: 10px;
-      min-width: min(280px, 100%);
-    }
-
-    .meta-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: #ffffff;
-      padding: 12px;
-    }
-
-    .meta-label {
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-
-    .meta-value {
-      margin-top: 4px;
-      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--text);
     }
 
     .slots {
@@ -981,14 +949,9 @@
       }
 
       .topbar,
-      .slide-header,
       .deck-footer {
         align-items: stretch;
         flex-direction: column;
-      }
-
-      .slide-header {
-        display: flex;
       }
 
       .top-actions,
@@ -1045,9 +1008,6 @@
         grid-template-columns: 1fr;
       }
 
-      .day-meta {
-        grid-template-columns: 1fr;
-      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1142,10 +1102,6 @@
                 <h2 class="slide-title">05/16 週六</h2>
                 <p class="slide-note">抵達成田後轉往秋葉原，先完成寄放與入住，再把晚上留給秋葉原採買與逛街。</p>
               </div>
-              <div class="day-meta">
-                <div class="meta-card"><div class="meta-label">Base</div><div class="meta-value">秋葉原</div></div>
-                <div class="meta-card"><div class="meta-label">Mode</div><div class="meta-value">Arrival</div></div>
-              </div>
             </div>
             <div class="slots" data-day="2026-05-16"></div>
           </article>
@@ -1161,10 +1117,6 @@
                 </div>
                 <h2 class="slide-title">05/17 週日</h2>
                 <p class="slide-note">上午上野/御徒町，中午拉麵，下午錦系町童裝採買，晚上晴空塔看夜景。</p>
-              </div>
-              <div class="day-meta">
-                <div class="meta-card"><div class="meta-label">Base</div><div class="meta-value">秋葉原</div></div>
-                <div class="meta-card"><div class="meta-label">Ticket</div><div class="meta-value">Skytree</div></div>
               </div>
             </div>
             <div class="slots" data-day="2026-05-17"></div>
@@ -1182,10 +1134,6 @@
                 <h2 class="slide-title">05/18 週一</h2>
                 <p class="slide-note">築地市場與壽喜燒訂位是主軸，下午接東京站一番街，晚上安排澀谷與表參道。</p>
               </div>
-              <div class="day-meta">
-                <div class="meta-card"><div class="meta-label">Lunch</div><div class="meta-value">13:00</div></div>
-                <div class="meta-card"><div class="meta-label">Area</div><div class="meta-value">築地</div></div>
-              </div>
             </div>
             <div class="slots" data-day="2026-05-18"></div>
           </article>
@@ -1201,10 +1149,6 @@
                 </div>
                 <h2 class="slide-title">05/19 週二</h2>
                 <p class="slide-note">上午退房寄行李後前往淺草和服、寺院與小吃，下午回秋葉原拿行李，晚上前往成田機場。</p>
-              </div>
-              <div class="day-meta">
-                <div class="meta-card"><div class="meta-label">Activity</div><div class="meta-value">和服</div></div>
-                <div class="meta-card"><div class="meta-label">Flight</div><div class="meta-value">21:15</div></div>
               </div>
             </div>
             <div class="slots" data-day="2026-05-19"></div>

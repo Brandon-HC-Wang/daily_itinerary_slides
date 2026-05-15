@@ -1718,6 +1718,53 @@
       });
     }
 
+    function slotPlaceRowsFromState() {
+      const rows = [];
+      Object.keys(editableSlotPlaces).forEach((day) => {
+        SLOT_LABELS.forEach((slot) => {
+          const placesForSlot = editableSlotPlaces[day][slot.key] || [];
+          placesForSlot.forEach((placeKey, index) => {
+            rows.push({
+              day,
+              slot_key: slot.key,
+              place_key: placeKey,
+              position: index,
+              updated_at: new Date().toISOString()
+            });
+          });
+        });
+      });
+      return rows;
+    }
+
+    function mergeRemoteSlotPlaces(rows) {
+      if (!rows.length) return;
+      const nextSlotPlaces = cloneInitialSlotPlaces();
+      Object.keys(nextSlotPlaces).forEach((day) => {
+        SLOT_LABELS.forEach((slot) => {
+          nextSlotPlaces[day][slot.key] = [];
+        });
+      });
+
+      rows
+        .slice()
+        .sort((a, b) => {
+          const byDay = a.day.localeCompare(b.day);
+          if (byDay !== 0) return byDay;
+          const bySlot = a.slot_key.localeCompare(b.slot_key);
+          if (bySlot !== 0) return bySlot;
+          return (a.position || 0) - (b.position || 0);
+        })
+        .forEach((row) => {
+          if (!nextSlotPlaces[row.day] || !(row.slot_key in nextSlotPlaces[row.day])) return;
+          if (!getPlace(row.place_key)) return;
+          if (nextSlotPlaces[row.day][row.slot_key].includes(row.place_key)) return;
+          nextSlotPlaces[row.day][row.slot_key].push(row.place_key);
+        });
+
+      editableSlotPlaces = nextSlotPlaces;
+    }
+
     function editPlaceName(placeKey) {
       const place = getPlace(placeKey);
       if (!place) return;
@@ -2011,6 +2058,36 @@
       mergeRemoteSlots(data || []);
     }
 
+    async function pushSlotPlaces() {
+      const { error: deleteError } = await supabaseClient
+        .from("slot_places")
+        .delete()
+        .not("day", "is", null);
+
+      if (deleteError) throw deleteError;
+
+      const rows = slotPlaceRowsFromState();
+      if (rows.length === 0) return;
+
+      const { error: insertError } = await supabaseClient
+        .from("slot_places")
+        .insert(rows);
+
+      if (insertError) throw insertError;
+    }
+
+    async function pullRemoteSlotPlaces() {
+      const { data, error } = await supabaseClient
+        .from("slot_places")
+        .select("day, slot_key, place_key, position, updated_at")
+        .order("day", { ascending: true })
+        .order("slot_key", { ascending: true })
+        .order("position", { ascending: true });
+
+      if (error) throw error;
+      mergeRemoteSlotPlaces(data || []);
+    }
+
     function setActionButtonLoading(button, label) {
       button.dataset.originalHtml = button.innerHTML;
       button.disabled = true;
@@ -2032,6 +2109,7 @@
       try {
         await pushLocalPlaces();
         await pushDirtySlots();
+        await pushSlotPlaces();
         dirtySlots = {};
         saveStateToStorage();
         renderPlaceLibrary();
@@ -2053,6 +2131,7 @@
       try {
         await pullRemotePlaces();
         await pullRemoteSlots();
+        await pullRemoteSlotPlaces();
         dirtySlots = {};
         saveStateToStorage();
         renderSlots();

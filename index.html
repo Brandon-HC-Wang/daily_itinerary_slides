@@ -1104,14 +1104,6 @@
           </svg>
           還原初始
         </button>
-        <button class="btn primary" id="exportBtn" type="button" title="下載目前編輯內容 JSON">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <path d="M7 10l5 5 5-5"></path>
-            <path d="M12 15V3"></path>
-          </svg>
-          匯出 JSON
-        </button>
       </div>
     </header>
 
@@ -2083,19 +2075,6 @@
       dots.forEach((dot, idx) => dot.classList.toggle("active", idx === currentIndex));
     }
 
-    function exportJson() {
-      const blob = new Blob([JSON.stringify({ itinerary: state, customPlaces, currentPlaces, placeNameOverrides, dirtySlots }, null, 2)], { type: "application/json;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = "tokyo_daily_itinerary.json";
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
-      showToast("已匯出目前編輯內容");
-    }
-
     function resetToInitial() {
       state = cloneInitialData();
       customPlaces = {};
@@ -2114,7 +2093,6 @@
 
     document.getElementById("prevBtn").addEventListener("click", () => goToSlide(currentIndex - 1));
     document.getElementById("nextBtn").addEventListener("click", () => goToSlide(currentIndex + 1));
-    document.getElementById("exportBtn").addEventListener("click", exportJson);
     document.getElementById("resetBtn").addEventListener("click", resetToInitial);
     uploadBtn.addEventListener("click", uploadSharedData);
     downloadBtn.addEventListener("click", downloadSharedData);

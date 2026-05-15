@@ -3,6 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tokyo Itinerary">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
   <title>Tokyo Travel Daily Slides</title>
   <style>
     :root {
@@ -1970,6 +1976,14 @@
     setBackdropMap(OVERVIEW_MAP_QUERY, true);
     setInitialSideMap();
     goToSlide(0);
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {
+          showToast("離線快取註冊失敗，仍可在線上使用");
+        });
+      });
+    }
   </script>
 </body>
 </html>

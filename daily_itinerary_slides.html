@@ -1,0 +1,1975 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tokyo Travel Daily Slides</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --panel-soft: #f0f9ff;
+      --text: #0f172a;
+      --muted: #475569;
+      --line: #dbe4ee;
+      --primary: #0ea5e9;
+      --primary-dark: #0369a1;
+      --accent: #f97316;
+      --accent-soft: #fff7ed;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Fira Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.16), transparent 30rem),
+        radial-gradient(circle at 90% 10%, rgba(249, 115, 22, 0.13), transparent 26rem),
+        linear-gradient(180deg, #f8fafc 0%, #eef7ff 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(90deg, rgba(248, 250, 252, 0.94) 0%, rgba(248, 250, 252, 0.8) 44%, rgba(248, 250, 252, 0.68) 100%);
+      pointer-events: none;
+    }
+
+    .map-backdrop {
+      display: none;
+    }
+
+    .map-backdrop iframe {
+      position: absolute;
+      inset: -28px;
+      width: calc(100% + 56px);
+      height: calc(100% + 56px);
+      border: 0;
+      filter: saturate(0.92) contrast(0.92);
+      opacity: 0;
+      transform: scale(1.035);
+      transition: opacity 520ms ease, transform 900ms ease;
+    }
+
+    .map-backdrop iframe.active {
+      opacity: 0.72;
+      transform: scale(1);
+    }
+
+    .map-watermark {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid rgba(14, 165, 233, 0.26);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--primary-dark);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+      backdrop-filter: blur(12px);
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-decoration: none;
+      transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    .map-watermark:hover,
+    .map-watermark:focus-visible {
+      border-color: rgba(249, 115, 22, 0.5);
+      background: #ffffff;
+      color: #9a3412;
+      outline: none;
+    }
+
+    .map-watermark svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .workspace {
+      display: block;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(14, 165, 233, 0.22);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #e0f2fe, #ffffff);
+      color: var(--primary-dark);
+      box-shadow: 0 12px 28px rgba(14, 165, 233, 0.14);
+    }
+
+    .title-wrap {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.25rem);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.84);
+      color: var(--text);
+      font-weight: 700;
+      transition: border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      border-color: rgba(14, 165, 233, 0.55);
+      background: #ffffff;
+      box-shadow: 0 10px 26px rgba(14, 165, 233, 0.14);
+      outline: none;
+    }
+
+    .btn.primary {
+      border-color: transparent;
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn.primary:hover,
+    .btn.primary:focus-visible {
+      background: var(--primary-dark);
+      color: #ffffff;
+    }
+
+    .deck {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .map-side {
+      display: none;
+    }
+
+    .map-side-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(248, 250, 252, 0.92);
+    }
+
+    .map-side-title {
+      min-width: 0;
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 950;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .map-side-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .map-side-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      flex: 0 0 auto;
+      padding: 0 10px;
+      border: 1px solid rgba(14, 165, 233, 0.24);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--primary-dark);
+      font-size: 0.8rem;
+      font-weight: 900;
+      text-decoration: none;
+      transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
+    }
+
+    .map-side-link:hover,
+    .map-side-link:focus-visible {
+      border-color: rgba(249, 115, 22, 0.48);
+      background: var(--accent-soft);
+      color: #9a3412;
+      outline: none;
+    }
+
+    .side-map-frame {
+      display: block;
+      width: 100%;
+      min-height: 0;
+      flex: 1;
+      border: 0;
+      background: #e2e8f0;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(248, 250, 252, 0.84);
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 54px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+
+    .tab:hover,
+    .tab:focus-visible {
+      border-color: rgba(14, 165, 233, 0.35);
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .tab.active {
+      border-color: rgba(14, 165, 233, 0.42);
+      background: #e0f2fe;
+      color: var(--primary-dark);
+    }
+
+    .tab-date {
+      display: block;
+      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .tab-label {
+      display: block;
+      margin-top: 3px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .tab-count {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.12);
+      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .viewport {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .track {
+      display: flex;
+      width: 400%;
+      transition: transform 280ms ease;
+    }
+
+    .slide {
+      width: 25%;
+      padding: 24px;
+    }
+
+    .slide-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .slide-title {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.7rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .slide-note {
+      max-width: 64ch;
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .day-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(90px, 1fr));
+      gap: 10px;
+      min-width: min(280px, 100%);
+    }
+
+    .meta-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 12px;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .meta-value {
+      margin-top: 4px;
+      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .slots {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    .slot {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .slot-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 54px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .slot-name {
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .slot-time {
+      color: var(--muted);
+      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.76rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .slot textarea {
+      width: 100%;
+      min-height: 132px;
+      height: auto;
+      resize: none;
+      border: 0;
+      padding: 14px;
+      color: var(--text);
+      background: transparent;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      outline: none;
+    }
+
+    .slot textarea:focus {
+      background: var(--panel-soft);
+      box-shadow: inset 0 0 0 2px rgba(14, 165, 233, 0.28);
+    }
+
+    .slot textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    .place-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 14px 0;
+      border-top: 1px solid rgba(219, 228, 238, 0.72);
+      background: #ffffff;
+    }
+
+    .place-strip.collapsed .place-chip:nth-of-type(n + 5) {
+      display: none;
+    }
+
+    .place-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      gap: 6px;
+      min-height: 30px;
+      padding: 5px 9px;
+      border: 1px solid rgba(14, 165, 233, 0.24);
+      border-radius: 999px;
+      background: #f0f9ff;
+      color: #075985;
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1.2;
+      text-decoration: none;
+      transition: border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .place-chip[data-category="stay"] {
+      border-color: rgba(14, 165, 233, 0.26);
+      background: #e0f2fe;
+      color: #075985;
+    }
+
+    .place-chip[data-category="place"] {
+      border-color: rgba(20, 184, 166, 0.28);
+      background: #ccfbf1;
+      color: #115e59;
+    }
+
+    .place-chip[data-category="restaurant"] {
+      border-color: rgba(249, 115, 22, 0.3);
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .place-chip[data-category="shopping"] {
+      border-color: rgba(168, 85, 247, 0.28);
+      background: #f3e8ff;
+      color: #6b21a8;
+    }
+
+    .place-chip[data-category="transport"] {
+      border-color: rgba(100, 116, 139, 0.32);
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .place-chip:hover,
+    .place-chip:focus-visible,
+    .place-chip.active {
+      border-color: rgba(249, 115, 22, 0.5);
+      background: var(--accent-soft);
+      color: #9a3412;
+      box-shadow: 0 8px 22px rgba(249, 115, 22, 0.13);
+      outline: none;
+    }
+
+    .place-chip svg {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 auto;
+    }
+
+    .chip-category {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.64);
+      font-size: 0.68rem;
+      font-weight: 950;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .place-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .places-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
+    }
+
+    .places-toggle:hover,
+    .places-toggle:focus-visible {
+      border-color: rgba(14, 165, 233, 0.48);
+      background: #f0f9ff;
+      color: var(--primary-dark);
+      outline: none;
+    }
+
+    .current-place {
+      display: grid;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid rgba(219, 228, 238, 0.72);
+      background: #f8fafc;
+    }
+
+    .current-place-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .current-place-action {
+      min-height: 28px;
+      padding: 0 8px;
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--primary-dark);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .current-place-action:hover,
+    .current-place-action:focus-visible {
+      border-color: rgba(249, 115, 22, 0.48);
+      background: var(--accent-soft);
+      color: #9a3412;
+      outline: none;
+    }
+
+    .current-place-empty {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .place-library {
+      margin-top: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+    }
+
+    .place-library-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(248, 250, 252, 0.9);
+    }
+
+    .place-library-title {
+      margin: 0;
+      font-size: 1.08rem;
+      font-weight: 950;
+    }
+
+    .place-library-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .place-library-body {
+      display: grid;
+      gap: 14px;
+      padding: 16px 18px 18px;
+    }
+
+    .add-place-form {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.1fr) minmax(180px, 1.4fr) minmax(130px, 0.7fr) auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--text);
+      padding: 0 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(14, 165, 233, 0.55);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+    }
+
+    .place-library-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .place-library.selecting {
+      border-color: rgba(249, 115, 22, 0.48);
+      box-shadow: 0 20px 60px rgba(249, 115, 22, 0.14);
+    }
+
+    .place-library-chip {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      text-align: left;
+    }
+
+    .place-library-chip .place-chip {
+      pointer-events: none;
+    }
+
+    .slot-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--line);
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .deck-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      background: rgba(248, 250, 252, 0.9);
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dots {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border: 0;
+      border-radius: 999px;
+      background: #cbd5e1;
+      padding: 0;
+      transition: width 180ms ease, background 180ms ease;
+    }
+
+    .dot.active {
+      width: 28px;
+      background: var(--primary);
+    }
+
+    .save-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .save-state strong {
+      color: var(--text);
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 10;
+      max-width: min(360px, calc(100vw - 40px));
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--text);
+      padding: 12px 14px;
+      box-shadow: 0 18px 46px rgba(15, 23, 42, 0.16);
+      font-size: 0.92rem;
+      font-weight: 700;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .map-preview {
+      position: fixed;
+      left: 50%;
+      right: auto;
+      bottom: 16px;
+      z-index: 20;
+      width: min(960px, calc(100vw - 32px));
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.34);
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, calc(100% + 24px));
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .map-preview.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      pointer-events: auto;
+    }
+
+    .map-preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .map-preview-title {
+      min-width: 0;
+      font-size: 0.95rem;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .map-preview-link {
+      flex: 0 0 auto;
+      color: var(--primary-dark);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .map-preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .map-preview-link:hover,
+    .map-preview-link:focus-visible {
+      color: #9a3412;
+      outline: none;
+    }
+
+    .map-preview-close {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .map-preview-close:hover,
+    .map-preview-close:focus-visible {
+      border-color: rgba(249, 115, 22, 0.48);
+      background: var(--accent-soft);
+      color: #9a3412;
+      outline: none;
+    }
+
+    .map-preview-frame {
+      width: 100%;
+      height: min(420px, 42vh);
+      min-height: 260px;
+      border: 0;
+      display: block;
+      background: #e2e8f0;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 1040px) {
+      .slots {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .add-place-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        width: min(100% - 20px, 1180px);
+        padding-top: 16px;
+      }
+
+      .topbar,
+      .slide-header,
+      .deck-footer {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .slide-header {
+        display: flex;
+      }
+
+      .top-actions,
+      .pager {
+        justify-content: stretch;
+      }
+
+      .top-actions .btn,
+      .pager .btn,
+      .add-place-form .btn {
+        flex: 1;
+      }
+
+      .place-library-head {
+        flex-direction: column;
+      }
+
+      .add-place-form {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .slide {
+        padding: 18px;
+      }
+
+      .slots {
+        grid-template-columns: 1fr;
+      }
+
+      .map-watermark {
+        position: static;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+
+      .map-preview {
+        bottom: 10px;
+        width: calc(100vw - 20px);
+      }
+
+      .map-preview-frame {
+        height: min(330px, 38vh);
+        min-height: 220px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .tabs {
+        grid-template-columns: 1fr;
+      }
+
+      .day-meta {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="map-backdrop" aria-hidden="true">
+    <iframe id="backdropMapA" class="active" title="Tokyo places map background" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <iframe id="backdropMapB" title="Tokyo place focus map background" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z"></path>
+            <path d="M9 4v13"></path>
+            <path d="M15 7v13"></path>
+          </svg>
+        </div>
+        <div class="title-wrap">
+          <h1>Tokyo Travel Daily Slides</h1>
+          <p class="subtitle">05/16 - 05/19 itinerary board. Hover place chips to shift the map backdrop; edits save in this browser.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="resetBtn" type="button" title="還原成 Excel 初始內容">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+            <path d="M3 3v6h6"></path>
+          </svg>
+          還原初始
+        </button>
+        <button class="btn primary" id="exportBtn" type="button" title="下載目前編輯內容 JSON">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <path d="M7 10l5 5 5-5"></path>
+            <path d="M12 15V3"></path>
+          </svg>
+          匯出 JSON
+        </button>
+      </div>
+    </header>
+
+    <div class="workspace">
+    <section class="deck" aria-label="每日行程 slides">
+      <nav class="tabs" aria-label="選擇日期">
+        <button class="tab active" type="button" data-index="0">
+          <span><span class="tab-date">05/16</span><span class="tab-label">週六 / 抵達東京</span></span>
+          <span class="tab-count">1</span>
+        </button>
+        <button class="tab" type="button" data-index="1">
+          <span><span class="tab-date">05/17</span><span class="tab-label">週日 / 上野與晴空塔</span></span>
+          <span class="tab-count">2</span>
+        </button>
+        <button class="tab" type="button" data-index="2">
+          <span><span class="tab-date">05/18</span><span class="tab-label">週一 / 築地與澀谷</span></span>
+          <span class="tab-count">3</span>
+        </button>
+        <button class="tab" type="button" data-index="3">
+          <span><span class="tab-date">05/19</span><span class="tab-label">週二 / 淺草與返程</span></span>
+          <span class="tab-count">4</span>
+        </button>
+      </nav>
+
+      <div class="viewport">
+        <div class="track" id="track">
+          <article class="slide" aria-label="05/16 週六行程">
+            <div class="slide-header">
+              <div>
+                <div class="eyebrow">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path>
+                  </svg>
+                  Day 1
+                </div>
+                <h2 class="slide-title">05/16 週六</h2>
+                <p class="slide-note">抵達成田後轉往秋葉原，先完成寄放與入住，再把晚上留給秋葉原採買與逛街。</p>
+              </div>
+              <div class="day-meta">
+                <div class="meta-card"><div class="meta-label">Base</div><div class="meta-value">秋葉原</div></div>
+                <div class="meta-card"><div class="meta-label">Mode</div><div class="meta-value">Arrival</div></div>
+              </div>
+            </div>
+            <div class="slots" data-day="2026-05-16"></div>
+          </article>
+
+          <article class="slide" aria-label="05/17 週日行程">
+            <div class="slide-header">
+              <div>
+                <div class="eyebrow">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path>
+                  </svg>
+                  Day 2
+                </div>
+                <h2 class="slide-title">05/17 週日</h2>
+                <p class="slide-note">上午上野/御徒町，中午拉麵，下午錦系町童裝採買，晚上晴空塔看夜景。</p>
+              </div>
+              <div class="day-meta">
+                <div class="meta-card"><div class="meta-label">Base</div><div class="meta-value">秋葉原</div></div>
+                <div class="meta-card"><div class="meta-label">Ticket</div><div class="meta-value">Skytree</div></div>
+              </div>
+            </div>
+            <div class="slots" data-day="2026-05-17"></div>
+          </article>
+
+          <article class="slide" aria-label="05/18 週一行程">
+            <div class="slide-header">
+              <div>
+                <div class="eyebrow">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path>
+                  </svg>
+                  Day 3
+                </div>
+                <h2 class="slide-title">05/18 週一</h2>
+                <p class="slide-note">築地市場與壽喜燒訂位是主軸，下午接東京站一番街，晚上安排澀谷與表參道。</p>
+              </div>
+              <div class="day-meta">
+                <div class="meta-card"><div class="meta-label">Lunch</div><div class="meta-value">13:00</div></div>
+                <div class="meta-card"><div class="meta-label">Area</div><div class="meta-value">築地</div></div>
+              </div>
+            </div>
+            <div class="slots" data-day="2026-05-18"></div>
+          </article>
+
+          <article class="slide" aria-label="05/19 週二行程">
+            <div class="slide-header">
+              <div>
+                <div class="eyebrow">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path>
+                  </svg>
+                  Day 4
+                </div>
+                <h2 class="slide-title">05/19 週二</h2>
+                <p class="slide-note">上午退房寄行李後前往淺草和服、寺院與小吃，下午回秋葉原拿行李，晚上前往成田機場。</p>
+              </div>
+              <div class="day-meta">
+                <div class="meta-card"><div class="meta-label">Activity</div><div class="meta-value">和服</div></div>
+                <div class="meta-card"><div class="meta-label">Flight</div><div class="meta-value">21:15</div></div>
+              </div>
+            </div>
+            <div class="slots" data-day="2026-05-19"></div>
+          </article>
+        </div>
+      </div>
+
+      <footer class="deck-footer">
+        <div class="pager">
+          <button class="btn" id="prevBtn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+            上一天
+          </button>
+          <button class="btn" id="nextBtn" type="button">
+            下一天
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="dots" aria-label="Slide progress">
+          <button class="dot active" type="button" data-index="0" aria-label="Go to 05/16"></button>
+          <button class="dot" type="button" data-index="1" aria-label="Go to 05/17"></button>
+          <button class="dot" type="button" data-index="2" aria-label="Go to 05/18"></button>
+          <button class="dot" type="button" data-index="3" aria-label="Go to 05/19"></button>
+        </div>
+        <div class="save-state" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="saveState">Local edits ready</span>
+        </div>
+      </footer>
+    </section>
+
+    <aside class="map-side" aria-label="地點地圖">
+      <div class="map-side-head">
+        <div>
+          <h2 class="map-side-title" id="sideMapTitle">52-place Tokyo map</h2>
+          <p class="map-side-subtitle" id="sideMapSubtitle">Hover a place chip to preview it here.</p>
+        </div>
+        <a class="map-side-link" id="sideMapLink" href="https://maps.app.goo.gl/2SeFuL1NPp5my6rS9" target="_blank" rel="noreferrer">Open</a>
+      </div>
+      <iframe class="side-map-frame" id="sideMapFrame" title="Selected Google Maps place" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </aside>
+    </div>
+
+    <section class="place-library" id="placeLibrary" aria-label="地點 Chip 總表">
+      <div class="place-library-head">
+        <div>
+          <h2 class="place-library-title">地點 Chip 總表</h2>
+          <p class="place-library-subtitle" id="placeLibrarySubtitle">目前共有 52 個地點。按「從總表選擇」後，再點這裡的 Chip 設為該時段目前位置。</p>
+        </div>
+      </div>
+      <div class="place-library-body">
+        <form class="add-place-form" id="addPlaceForm">
+          <div class="field">
+            <label for="newPlaceName">地點名稱</label>
+            <input id="newPlaceName" name="name" type="text" autocomplete="off" placeholder="例如：東京車站">
+          </div>
+          <div class="field">
+            <label for="newPlaceUrl">Google Maps 連結</label>
+            <input id="newPlaceUrl" name="url" type="url" autocomplete="off" placeholder="貼上 Google Maps 分享連結">
+          </div>
+          <div class="field">
+            <label for="newPlaceCategory">類型</label>
+            <select id="newPlaceCategory" name="category">
+              <option value="place">地點</option>
+              <option value="restaurant">餐廳</option>
+              <option value="shopping">購物</option>
+              <option value="stay">住宿</option>
+              <option value="transport">交通</option>
+            </select>
+          </div>
+          <a class="btn" id="openMapsSearch" href="https://www.google.com/maps/search/?api=1&query=Tokyo" target="_blank" rel="noreferrer">開 Google Maps</a>
+          <button class="btn primary" type="submit">新增地點</button>
+        </form>
+        <div class="place-library-strip" id="placeLibraryStrip"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <aside class="map-preview" id="mapPreview" aria-label="Google Maps preview">
+    <div class="map-preview-head">
+      <div class="map-preview-title" id="mapPreviewTitle">Google Maps</div>
+      <div class="map-preview-actions">
+        <a class="map-preview-link" id="mapPreviewLink" href="#" target="_blank" rel="noreferrer">Open Maps</a>
+        <button class="map-preview-close" id="mapPreviewClose" type="button" aria-label="關閉地圖預覽">×</button>
+      </div>
+    </div>
+    <iframe class="map-preview-frame" id="mapPreviewFrame" title="Google Maps preview" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </aside>
+
+  <script>
+    const STORAGE_KEY = "tokyo-travel-daily-slides-v1";
+    const OVERVIEW_MAP_URL = "https://maps.app.goo.gl/2SeFuL1NPp5my6rS9";
+    const OVERVIEW_MAP_QUERY = "Tokyo travel saved places";
+    const SLOT_LABELS = [
+      { key: "morning", name: "早上", time: "Morning" },
+      { key: "lunch", name: "中餐", time: "Lunch" },
+      { key: "afternoon", name: "下午", time: "Afternoon" },
+      { key: "dinner", name: "晚餐", time: "Dinner" },
+      { key: "night", name: "晚上", time: "Night" }
+    ];
+
+    const initialData = {
+      "2026-05-16": {
+        label: "05/16 週六",
+        morning: "4:45到桃園機場\n6:45~11:15飛機",
+        lunch: "成田機場搭車到日暮里轉車到秋葉原, 先去飯店寄行李，直接在秋葉原吃飯",
+        afternoon: "入住飯店Remm秋葉原",
+        dinner: "",
+        night: "秋葉原：動漫(貓咪老師)，Bic camera，行李箱"
+      },
+      "2026-05-17": {
+        label: "05/17 週日",
+        morning: "御徒町(上野)\n上野阿美橫町逛街(11-19)",
+        lunch: "鴨to蔥拉麵(要排隊)",
+        afternoon: "童裝-錦系町-阿卡將/西松屋/uniqlo(10-21點)",
+        dinner: "",
+        night: "晴空塔，高空市景(8點) - 已訂票"
+      },
+      "2026-05-18": {
+        label: "05/18 週一",
+        morning: "築地市場逛逛(9-13點，現金)",
+        lunch: "築地市場壽喜燒：Wagyu Hotpot FOODLAB Tsukiji(湘婷訂位ok) 13:00",
+        afternoon: "東京一番街：買伴手禮",
+        dinner: "",
+        night: "澀谷Parco百貨6F-寶可夢中心(monpoke嬰兒服飾)+任天堂商店; 表參道"
+      },
+      "2026-05-19": {
+        label: "05/19 週二",
+        morning: "退房，寄放行李在大廳\n10點和服淺草寺 & 雷門，和服/古寺/小吃\n; 松屋換J卡伴手禮",
+        lunch: "",
+        afternoon: "回秋葉原飯店拿行李",
+        dinner: "",
+        night: "18點離開東京\n19:15到成田機場\n21:15~23:55飛機"
+      }
+    };
+
+    const places = {
+      uniqloKinshicho: { name: "UNIQLO Arcakit Kinshicho Store", category: "shopping", query: "UNIQLO Arcakit Kinshicho Store Tokyo", url: "https://maps.app.goo.gl/AMjXXYM5tDHH7PDfA", lat: 35.6973, lng: 139.8137 },
+      nishimatsuyaKinshicho: { name: "Nishimatsuya Kinshicho Parco", category: "shopping", query: "Nishimatsuya Kinshicho Parco Tokyo", url: "https://maps.app.goo.gl/WhPFiUXGCMMfxowSA", lat: 35.6962, lng: 139.8156 },
+      akachanhonpoKinshicho: { name: "Akachanhonpo Arca kit Kinshicho shop", category: "shopping", query: "Akachanhonpo Arca kit Kinshicho shop Tokyo", url: "https://maps.app.goo.gl/hetiL5zqKt7EJ6Cy9", lat: 35.6973, lng: 139.8137 },
+      scienceMuseum: { name: "國立科學博物館", category: "place", query: "National Museum of Nature and Science Tokyo", url: "https://maps.app.goo.gl/R2pwnQMewwxz9iPX6", lat: 35.7163, lng: 139.7763 },
+      hankyuMens: { name: "Hankyu Men's Tokyo", category: "shopping", query: "Hankyu Men's Tokyo", url: "https://maps.app.goo.gl/z8Bd8q3pGgc9sJhK7", lat: 35.6723, lng: 139.7625 },
+      lawsonAkibaTolim: { name: "Lawson Akiba Tolim", category: "shopping", query: "Lawson Akiba Tolim Tokyo", url: "https://maps.app.goo.gl/gFYnAPnLfFMC6FFn6", lat: 35.6983, lng: 139.7730 },
+      isomaru: { name: "24小時海鮮居酒屋 磯丸水產", category: "restaurant", query: "磯丸水產 Akihabara Tokyo", url: "https://maps.app.goo.gl/dfwcTJWhZMXYuKUK6", lat: 35.6982, lng: 139.7722 },
+      hondaRamen: { name: "麵處 HONDA 秋葉原本店", category: "restaurant", query: "麵處 HONDA 秋葉原本店", url: "https://maps.app.goo.gl/hVP2DF3Wd9ujQ8M87", lat: 35.6997, lng: 139.7713 },
+      toritsune: { name: "鳥つね 自然洞", category: "restaurant", query: "鳥つね 自然洞 Tokyo", url: "https://maps.app.goo.gl/Jf7z69WK2FQVcpzm6", lat: 35.7051, lng: 139.7709 },
+      ippeKoppe: { name: "Ippe Koppe by Tonkatsu Aoki", category: "restaurant", query: "Ippe Koppe by Tonkatsu Aoki Tokyo", url: "https://maps.app.goo.gl/gkTG4KsXdw4dNp3v6", lat: 35.6990, lng: 139.7705 },
+      gyukatsu: { name: "Gyukatsu Motomura Akihabara Branch", category: "restaurant", query: "Gyukatsu Motomura Akihabara Branch", url: "https://maps.app.goo.gl/TJGQgNT6v41o8XAW9", lat: 35.6986, lng: 139.7714 },
+      nonbei: { name: "澀谷飲兵衛橫丁", category: "restaurant", query: "澀谷飲兵衛橫丁 Tokyo", url: "https://maps.app.goo.gl/E2cPFNxXikPqiPjp9", lat: 35.6594, lng: 139.7016 },
+      tonkatsuAkira: { name: "Tonkatsu Akira Shibuya", category: "restaurant", query: "Tonkatsu Akira Shibuya", url: "https://maps.app.goo.gl/VLbxUGLo3gPYdbny5", lat: 35.6593, lng: 139.7025 },
+      shibuyaStream: { name: "澀谷線流", category: "place", query: "Shibuya Stream Tokyo", url: "https://maps.app.goo.gl/VcyXmk1EAfrbHqcv8", lat: 35.6576, lng: 139.7032 },
+      sakuraStage: { name: "Shibuya Sakura Stage - NIGIWAI STAGE", category: "place", query: "Shibuya Sakura Stage NIGIWAI STAGE", url: "https://maps.app.goo.gl/bxcfxu62uC8yQwPQ6", lat: 35.6573, lng: 139.7007 },
+      cerveza: { name: "Cerveza JPN", category: "restaurant", query: "Cerveza JPN Shibuya", url: "https://maps.app.goo.gl/sbmhGLnnboar9zyn6", lat: 35.6579, lng: 139.7015 },
+      yakitonHinata: { name: "Yakiton Hinata Tokyo Skytree Station", category: "restaurant", query: "Yakiton Hinata Tokyo Skytree Station", url: "https://maps.app.goo.gl/1AdddbPTvLnG4Bfg9", lat: 35.7103, lng: 139.8112 },
+      sanrioGiftGate: { name: "Sanrio Gift Gate", category: "shopping", query: "Sanrio Gift Gate Ueno Tokyo", url: "https://maps.app.goo.gl/RyZz5tqHTYBBZFvr9", lat: 35.7102, lng: 139.7749 },
+      niki: { name: "二木菓子 第一營業所", category: "shopping", query: "二木菓子 第一營業所 上野", url: "https://maps.app.goo.gl/BziHEqDtnXCAh8oG8", lat: 35.7093, lng: 139.7742 },
+      kameju: { name: "銅鑼燒 龜十", category: "restaurant", query: "龜十 淺草 Tokyo", url: "https://maps.app.goo.gl/eGHLtE5TRk4nGVvLA", lat: 35.7117, lng: 139.7966 },
+      kamoNegi: { name: "Ramen Kamo to Negi Ueno Okachimachi Main Store", category: "restaurant", query: "Ramen Kamo to Negi Ueno Okachimachi Main Store", url: "https://maps.app.goo.gl/rwU8YRMjq7ECYtUG7", lat: 35.7079, lng: 139.7744 },
+      donkiAkihabara: { name: "唐吉訶德 秋葉原店", category: "shopping", query: "Don Quijote Akihabara Tokyo", url: "https://maps.app.goo.gl/QSHi2txxwk2NSDhh7", lat: 35.7005, lng: 139.7710 },
+      akky: { name: "AKKY Main Store", category: "shopping", query: "AKKY Main Store Akihabara", url: "https://maps.app.goo.gl/cdmfEpbTy6qPES3e8", lat: 35.6991, lng: 139.7717 },
+      ameyoko: { name: "上野阿美橫商店街", category: "place", query: "上野阿美橫商店街 Tokyo", url: "https://maps.app.goo.gl/AGRFa8aLjKfQoZKdA", lat: 35.7091, lng: 139.7741 },
+      matsuyaGinza: { name: "松屋銀座", category: "shopping", query: "松屋銀座 Tokyo", url: "https://maps.app.goo.gl/4znFcfugv8ehUzgk6", lat: 35.6725, lng: 139.7664 },
+      matsuyaAsakusa: { name: "松屋淺草", category: "shopping", query: "松屋淺草 Tokyo", url: "https://maps.app.goo.gl/Fb1ewqqRmnpcDukV9", lat: 35.7119, lng: 139.7986 },
+      cocokaraYaesu: { name: "Cocokara Fine Yaesu Kitaguchi", category: "shopping", query: "Cocokara Fine Yaesu Kitaguchi Tokyo", url: "https://maps.app.goo.gl/xxMW4kr1w6LNCctaA", lat: 35.6814, lng: 139.7696 },
+      aideno: { name: "愛電王 秋葉原AKIBA店", category: "shopping", query: "愛電王 秋葉原AKIBA店", url: "https://maps.app.goo.gl/dYu2YokxoMH9HCGeA", lat: 35.6999, lng: 139.7716 },
+      shibuyaParco: { name: "澀谷PARCO", category: "shopping", query: "澀谷PARCO Tokyo", url: "https://maps.app.goo.gl/Sp6753oedmHXUJYx5", lat: 35.6620, lng: 139.6996 },
+      tsukijiIroha: { name: "築地彩葉 築地橫丁店", category: "restaurant", query: "築地彩葉 築地橫丁店", url: "https://maps.app.goo.gl/Mkr7QFDFABRLid9N6", lat: 35.6654, lng: 139.7706 },
+      tsukijiTonboya: { name: "築地蜻蜓屋", category: "restaurant", query: "築地蜻蜓屋 Tokyo", url: "https://maps.app.goo.gl/VBPaFVALWXyzaQo7A", lat: 35.6651, lng: 139.7702 },
+      suzukien: { name: "Suzukien Asakusa matcha gelato", category: "restaurant", query: "Suzukien Asakusa matcha gelato", url: "https://maps.app.goo.gl/j1pJ7h2dzZjiNmun6", lat: 35.7160, lng: 139.7998 },
+      kimonoAddress: { name: "Hanakawado 1-chome-11-1 あゆみビル", category: "place", query: "Tokyo Taito City Hanakawado 1-chome-11-1 あゆみビル", url: "https://maps.app.goo.gl/3FyhZDcdCQXQTE539", lat: 35.7132, lng: 139.7990 },
+      foodlab: { name: "Wagyu Hotpot FOODLAB Tsukiji", category: "restaurant", query: "Wagyu Hotpot FOODLAB Tsukiji", url: "https://maps.app.goo.gl/oaJktK2NDAYmH4dM6", lat: 35.6655, lng: 139.7703 },
+      koishikawa: { name: "小石川後樂園", category: "place", query: "小石川後樂園 Tokyo", url: "https://maps.app.goo.gl/rA8BJnvw4xJknAar9", lat: 35.7057, lng: 139.7498 },
+      animate: { name: "Animate Akihabara", category: "shopping", query: "Animate Akihabara Tokyo", url: "https://maps.app.goo.gl/n8CeqEY72df8KHWj9", lat: 35.7006, lng: 139.7719 },
+      bicAkihabara: { name: "BIC CAMERA 秋葉原店", category: "shopping", query: "BIC CAMERA 秋葉原店", url: "https://maps.app.goo.gl/NgCWAhzu9RQxxDDF7", lat: 35.6984, lng: 139.7720 },
+      remmAkihabara: { name: "秋葉原雷姆飯店", category: "stay", query: "remm Akihabara Tokyo", url: "https://maps.app.goo.gl/LyXiAs6ZGxiNYQaAA", lat: 35.6985, lng: 139.7731 },
+      oysterShell: { name: "Ramen Oyster And Shell", category: "restaurant", query: "Ramen Oyster And Shell Tokyo", url: "https://maps.app.goo.gl/zP1jBdpTxYoyLxHv9", lat: 35.6660, lng: 139.7702 },
+      tokyoIchibangai: { name: "東京站一番街", category: "shopping", query: "東京站一番街 Tokyo Station", url: "https://maps.app.goo.gl/xHjSUcqJVxoYKrLg7", lat: 35.6812, lng: 139.7671 },
+      akihabaraElectric: { name: "Akihabara Electric Town", category: "place", query: "Akihabara Electric Town Tokyo", url: "https://maps.app.goo.gl/DqmKxbvYu3QHVDAP7", lat: 35.6996, lng: 139.7715 },
+      teamlab: { name: "teamLab Borderless", category: "place", query: "teamLab Borderless MORI Building DIGITAL ART MUSEUM", url: "https://maps.app.goo.gl/qkk1dT6xGoBmbP6W7", lat: 35.6604, lng: 139.7293 },
+      omotesandoHills: { name: "表參道之丘", category: "shopping", query: "表參道之丘 Tokyo", url: "https://maps.app.goo.gl/bJByEotEfK1poR536", lat: 35.6673, lng: 139.7084 },
+      sumidaWalk: { name: "隅田川步道", category: "place", query: "隅田川步道 Tokyo", url: "https://maps.app.goo.gl/iNgh6BusX9Yp7itW7", lat: 35.7119, lng: 139.8042 },
+      chiikawaSkytree: { name: "ちいかわらんど 東京スカイツリータウン・ソラマチ店", category: "shopping", query: "ちいかわらんど 東京スカイツリータウン ソラマチ店", url: "https://maps.app.goo.gl/KQUQtVmtYdN1JALe8", lat: 35.7100, lng: 139.8107 },
+      chiikawaTokyo: { name: "Chiikawa Land TOKYO Station", category: "shopping", query: "Chiikawa Land TOKYO Station", url: "https://maps.app.goo.gl/3S1H96cg2kRCPdds6", lat: 35.6812, lng: 139.7671 },
+      skytree: { name: "東京晴空塔", category: "place", query: "東京晴空塔 Tokyo Skytree", url: "https://maps.app.goo.gl/vFWKMF619vvw9xxb6", lat: 35.7101, lng: 139.8107 },
+      magnet: { name: "MAGNET by SHIBUYA109", category: "shopping", query: "MAGNET by SHIBUYA109 Tokyo", url: "https://maps.app.goo.gl/GTM8XFuvXgPuzrXEA", lat: 35.6598, lng: 139.7006 },
+      tsukijiOuter: { name: "Fish Market Tsukiji Outer Market", category: "place", query: "Tsukiji Outer Market Tokyo", url: "https://maps.app.goo.gl/2J59EAjS9KZAE6Cv5", lat: 35.6655, lng: 139.7707 },
+      sensoji: { name: "淺草寺", category: "place", query: "淺草寺 Sensoji Tokyo", url: "https://maps.app.goo.gl/E2APzCn7aCZN5Yrb8", lat: 35.7148, lng: 139.7967 },
+      narita: { name: "成田國際機場", category: "transport", query: "成田國際機場 Narita International Airport", url: "https://maps.app.goo.gl/aP8ftpACgyJ43sZq9", lat: 35.7720, lng: 140.3929 },
+      roppongiHills: { name: "六本木新城", category: "place", query: "六本木新城 Roppongi Hills Tokyo", url: "https://maps.app.goo.gl/KaLnkibs86aMk18P7", lat: 35.6605, lng: 139.7292 }
+    };
+
+    const slotPlaces = {
+      "2026-05-16": {
+        morning: ["narita"],
+        lunch: ["narita", "remmAkihabara", "lawsonAkibaTolim", "hondaRamen", "gyukatsu", "isomaru"],
+        afternoon: ["remmAkihabara", "akihabaraElectric"],
+        dinner: ["hondaRamen", "gyukatsu", "toritsune", "ippeKoppe", "isomaru"],
+        night: ["akihabaraElectric", "animate", "bicAkihabara", "donkiAkihabara", "akky", "aideno", "lawsonAkibaTolim"]
+      },
+      "2026-05-17": {
+        morning: ["ameyoko", "scienceMuseum", "niki", "sanrioGiftGate"],
+        lunch: ["kamoNegi"],
+        afternoon: ["akachanhonpoKinshicho", "nishimatsuyaKinshicho", "uniqloKinshicho"],
+        dinner: ["yakitonHinata"],
+        night: ["skytree", "chiikawaSkytree", "sumidaWalk", "yakitonHinata"]
+      },
+      "2026-05-18": {
+        morning: ["tsukijiOuter", "tsukijiIroha", "tsukijiTonboya", "oysterShell"],
+        lunch: ["foodlab"],
+        afternoon: ["tokyoIchibangai", "chiikawaTokyo", "cocokaraYaesu", "matsuyaGinza", "hankyuMens"],
+        dinner: ["tonkatsuAkira", "nonbei", "cerveza"],
+        night: ["shibuyaParco", "magnet", "shibuyaStream", "sakuraStage", "omotesandoHills", "teamlab", "roppongiHills", "koishikawa"]
+      },
+      "2026-05-19": {
+        morning: ["kimonoAddress", "sensoji", "kameju", "suzukien", "matsuyaAsakusa", "sumidaWalk"],
+        lunch: ["matsuyaAsakusa", "kameju", "suzukien"],
+        afternoon: ["remmAkihabara", "akihabaraElectric"],
+        dinner: ["narita"],
+        night: ["narita"]
+      }
+    };
+
+    let appState = loadState();
+    let state = appState.itinerary;
+    let customPlaces = appState.customPlaces;
+    let currentPlaces = appState.currentPlaces;
+    let placeNameOverrides = appState.placeNameOverrides;
+    let currentIndex = 0;
+    let activeSlotSelection = null;
+
+    const track = document.getElementById("track");
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const dots = Array.from(document.querySelectorAll(".dot"));
+    const saveState = document.getElementById("saveState");
+    const toast = document.getElementById("toast");
+    const mapPreview = document.getElementById("mapPreview");
+    const mapPreviewTitle = document.getElementById("mapPreviewTitle");
+    const mapPreviewLink = document.getElementById("mapPreviewLink");
+    const mapPreviewFrame = document.getElementById("mapPreviewFrame");
+    const mapPreviewClose = document.getElementById("mapPreviewClose");
+    const sideMapTitle = document.getElementById("sideMapTitle");
+    const sideMapSubtitle = document.getElementById("sideMapSubtitle");
+    const sideMapLink = document.getElementById("sideMapLink");
+    const sideMapFrame = document.getElementById("sideMapFrame");
+    const placeLibrary = document.getElementById("placeLibrary");
+    const placeLibrarySubtitle = document.getElementById("placeLibrarySubtitle");
+    const placeLibraryStrip = document.getElementById("placeLibraryStrip");
+    const addPlaceForm = document.getElementById("addPlaceForm");
+    const newPlaceName = document.getElementById("newPlaceName");
+    const newPlaceUrl = document.getElementById("newPlaceUrl");
+    const newPlaceCategory = document.getElementById("newPlaceCategory");
+    const openMapsSearch = document.getElementById("openMapsSearch");
+    const backdropFrames = [
+      document.getElementById("backdropMapA"),
+      document.getElementById("backdropMapB")
+    ];
+    let previewTimer;
+    let activeBackdropIndex = 0;
+    let currentBackdropQuery = "";
+
+    function cloneInitialData() {
+      return JSON.parse(JSON.stringify(initialData));
+    }
+
+    function buildDefaultCurrentPlaces() {
+      const defaults = {};
+      Object.keys(initialData).forEach((day) => {
+        defaults[day] = {};
+        SLOT_LABELS.forEach((slot) => {
+          defaults[day][slot.key] = (slotPlaces[day][slot.key] || [])[0] || "";
+        });
+      });
+      return defaults;
+    }
+
+    function mergeCurrentPlaces(savedCurrentPlaces = {}) {
+      const defaults = buildDefaultCurrentPlaces();
+      Object.keys(defaults).forEach((day) => {
+        defaults[day] = { ...defaults[day], ...(savedCurrentPlaces[day] || {}) };
+      });
+      return defaults;
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const fallback = {
+        itinerary: cloneInitialData(),
+        customPlaces: {},
+        currentPlaces: buildDefaultCurrentPlaces(),
+        placeNameOverrides: {}
+      };
+      if (!raw) return fallback;
+      try {
+        const parsed = JSON.parse(raw);
+        const isStructured = parsed && typeof parsed === "object" && parsed.itinerary;
+        const itinerary = isStructured ? parsed.itinerary : parsed;
+        return {
+          itinerary: { ...cloneInitialData(), ...itinerary },
+          customPlaces: isStructured ? parsed.customPlaces || {} : {},
+          currentPlaces: mergeCurrentPlaces(isStructured ? parsed.currentPlaces || {} : {}),
+          placeNameOverrides: isStructured ? parsed.placeNameOverrides || {} : {}
+        };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveStateToStorage() {
+      appState = { itinerary: state, customPlaces, currentPlaces, placeNameOverrides };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      const time = new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+      saveState.innerHTML = `Saved <strong>${time}</strong>`;
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function embedUrl(place) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(place.query)}&output=embed`;
+    }
+
+    function mapEmbedFromQuery(query) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+    }
+
+    function setBackdropMap(query, immediate = false) {
+      if (query === currentBackdropQuery) return;
+      currentBackdropQuery = query;
+
+      const nextIndex = activeBackdropIndex === 0 ? 1 : 0;
+      const currentFrame = backdropFrames[activeBackdropIndex];
+      const nextFrame = backdropFrames[nextIndex];
+
+      nextFrame.src = mapEmbedFromQuery(query);
+
+      if (immediate) {
+        currentFrame.classList.remove("active");
+        nextFrame.classList.add("active");
+        activeBackdropIndex = nextIndex;
+        return;
+      }
+
+      window.setTimeout(() => {
+        currentFrame.classList.remove("active");
+        nextFrame.classList.add("active");
+        activeBackdropIndex = nextIndex;
+      }, 80);
+    }
+
+    function showMapPreview(place) {
+      window.clearTimeout(previewTimer);
+      mapPreviewTitle.textContent = place.name;
+      mapPreviewLink.href = place.url;
+      if (mapPreviewFrame.dataset.query !== place.query) {
+        mapPreviewFrame.src = embedUrl(place);
+        mapPreviewFrame.dataset.query = place.query;
+      }
+      mapPreview.classList.add("show");
+      setBackdropMap(place.query);
+      updateSideMap(place);
+    }
+
+    function updateSideMap(place) {
+      sideMapTitle.textContent = place.name;
+      sideMapSubtitle.textContent = "Google Maps preview";
+      sideMapLink.href = place.url;
+      if (sideMapFrame.dataset.query !== place.query) {
+        sideMapFrame.src = embedUrl(place);
+        sideMapFrame.dataset.query = place.query;
+      }
+    }
+
+    function setInitialSideMap() {
+      sideMapTitle.textContent = "52-place Tokyo map";
+      sideMapSubtitle.textContent = "Hover a place chip to preview it here.";
+      sideMapLink.href = OVERVIEW_MAP_URL;
+      sideMapFrame.src = mapEmbedFromQuery(OVERVIEW_MAP_QUERY);
+      sideMapFrame.dataset.query = OVERVIEW_MAP_QUERY;
+    }
+
+    function scheduleHideMapPreview() {
+      window.clearTimeout(previewTimer);
+      previewTimer = window.setTimeout(() => mapPreview.classList.remove("show"), 900);
+    }
+
+    function hideMapPreview() {
+      window.clearTimeout(previewTimer);
+      mapPreview.classList.remove("show");
+    }
+
+    function categoryMeta(category) {
+      const meta = {
+        stay: {
+          label: "住宿",
+          icon: '<path d="M3 21h18"></path><path d="M5 21V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"></path><path d="M9 21v-8h6v8"></path>'
+        },
+        place: {
+          label: "地點",
+          icon: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"></path><circle cx="12" cy="10" r="3"></circle>'
+        },
+        restaurant: {
+          label: "餐廳",
+          icon: '<path d="M4 3v8"></path><path d="M8 3v8"></path><path d="M4 7h4"></path><path d="M6 11v10"></path><path d="M17 3v18"></path><path d="M14 3c0 4 1 6 3 6"></path>'
+        },
+        shopping: {
+          label: "購物",
+          icon: '<path d="M6 2l1.5 4h9L18 2"></path><path d="M3 6h18l-2 15H5L3 6z"></path><path d="M9 10a3 3 0 0 0 6 0"></path>'
+        },
+        transport: {
+          label: "交通",
+          icon: '<path d="M10.5 6L12 2l1.5 4L21 9l-7.5 3L12 22l-1.5-10L3 9l7.5-3z"></path>'
+        }
+      };
+      return meta[category] || meta.place;
+    }
+
+    function allPlaces() {
+      const merged = { ...places, ...customPlaces };
+      Object.keys(placeNameOverrides).forEach((placeKey) => {
+        if (merged[placeKey]) {
+          merged[placeKey] = { ...merged[placeKey], name: placeNameOverrides[placeKey] };
+        }
+      });
+      return merged;
+    }
+
+    function getPlace(placeKey) {
+      return allPlaces()[placeKey];
+    }
+
+    function allPlaceEntries() {
+      return Object.entries(allPlaces()).sort((a, b) => a[1].name.localeCompare(b[1].name, "zh-Hant"));
+    }
+
+    function editPlaceName(placeKey) {
+      const place = getPlace(placeKey);
+      if (!place) return;
+      const nextName = window.prompt("編輯地點名稱", place.name);
+      if (!nextName) return;
+      const trimmedName = nextName.trim();
+      if (!trimmedName || trimmedName === place.name) return;
+      placeNameOverrides[placeKey] = trimmedName;
+      saveStateToStorage();
+      renderSlots();
+      renderPlaceLibrary();
+      showToast("已更新地點名稱");
+    }
+
+    function attachLongPressEdit(element, placeKey) {
+      let timer = null;
+      let longPressed = false;
+
+      element.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        longPressed = false;
+        timer = window.setTimeout(() => {
+          longPressed = true;
+          element.dataset.longPress = "true";
+          editPlaceName(placeKey);
+        }, 650);
+      });
+
+      ["pointerup", "pointerleave", "pointercancel"].forEach((eventName) => {
+        element.addEventListener(eventName, () => {
+          window.clearTimeout(timer);
+        });
+      });
+
+      element.addEventListener("click", (event) => {
+        if (!longPressed && element.dataset.longPress !== "true") return;
+        event.preventDefault();
+        event.stopPropagation();
+        longPressed = false;
+        window.setTimeout(() => {
+          delete element.dataset.longPress;
+        }, 0);
+      });
+    }
+
+    function createPlaceChip(placeKey, options = {}) {
+      const place = getPlace(placeKey);
+      if (!place) return document.createTextNode("");
+      const category = categoryMeta(place.category);
+      const chip = document.createElement(options.tagName || "a");
+      chip.className = "place-chip";
+      if (options.active) chip.classList.add("active");
+      chip.dataset.category = place.category;
+      if (chip.tagName === "A") {
+        chip.href = place.url;
+        chip.target = "_blank";
+        chip.rel = "noreferrer";
+      }
+      const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      icon.setAttribute("viewBox", "0 0 24 24");
+      icon.setAttribute("fill", "none");
+      icon.setAttribute("stroke", "currentColor");
+      icon.setAttribute("stroke-width", "2");
+      icon.setAttribute("stroke-linecap", "round");
+      icon.setAttribute("stroke-linejoin", "round");
+      icon.setAttribute("aria-hidden", "true");
+      icon.innerHTML = category.icon;
+
+      const categoryLabel = document.createElement("span");
+      categoryLabel.className = "chip-category";
+      categoryLabel.textContent = category.label;
+
+      const name = document.createElement("span");
+      name.textContent = place.name;
+
+      chip.append(icon, categoryLabel, name);
+      if (!options.disablePreview) {
+        chip.addEventListener("mouseenter", () => showMapPreview(place));
+        chip.addEventListener("mouseleave", scheduleHideMapPreview);
+        chip.addEventListener("focus", () => showMapPreview(place));
+        chip.addEventListener("blur", scheduleHideMapPreview);
+      }
+      if (!options.disableEdit) attachLongPressEdit(chip, placeKey);
+      return chip;
+    }
+
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+
+    function createPlacesToggle(placeStrip, hiddenCount) {
+      const toggle = document.createElement("button");
+      toggle.className = "places-toggle";
+      toggle.type = "button";
+      toggle.textContent = `+${hiddenCount} more`;
+      toggle.addEventListener("click", () => {
+        const isCollapsed = placeStrip.classList.toggle("collapsed");
+        toggle.textContent = isCollapsed ? `+${hiddenCount} more` : "收合";
+      });
+      return toggle;
+    }
+
+    function updatePlaceLibrarySubtitle() {
+      const count = allPlaceEntries().length;
+      if (activeSlotSelection) {
+        const dayLabel = state[activeSlotSelection.day].label;
+        const slotLabel = SLOT_LABELS.find((slot) => slot.key === activeSlotSelection.slotKey).name;
+        placeLibrarySubtitle.textContent = `正在選擇 ${dayLabel} ${slotLabel} 的目前位置。點下方任一 Chip 即可套用。`;
+        placeLibrary.classList.add("selecting");
+        return;
+      }
+      placeLibrarySubtitle.textContent = `目前共有 ${count} 個地點。按「從總表選擇」後，再點這裡的 Chip 設為該時段目前位置。`;
+      placeLibrary.classList.remove("selecting");
+    }
+
+    function setActiveSlotSelection(day, slotKey) {
+      activeSlotSelection = { day, slotKey };
+      renderSlots();
+      renderPlaceLibrary();
+      placeLibrary.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function setCurrentPlace(day, slotKey, placeKey) {
+      if (!getPlace(placeKey)) return;
+      currentPlaces[day][slotKey] = placeKey;
+      activeSlotSelection = null;
+      saveStateToStorage();
+      renderSlots();
+      renderPlaceLibrary();
+      showToast("已設定目前位置");
+    }
+
+    function createCurrentPlacePanel(day, slot) {
+      const panel = document.createElement("div");
+      panel.className = "current-place";
+
+      const head = document.createElement("div");
+      head.className = "current-place-head";
+
+      const label = document.createElement("span");
+      label.textContent = "目前位置";
+
+      const action = document.createElement("button");
+      action.className = "current-place-action";
+      action.type = "button";
+      action.textContent = activeSlotSelection && activeSlotSelection.day === day && activeSlotSelection.slotKey === slot.key ? "選擇中" : "從總表選擇";
+      action.addEventListener("click", () => setActiveSlotSelection(day, slot.key));
+
+      head.append(label, action);
+      panel.append(head);
+
+      const selectedPlaceKey = currentPlaces[day][slot.key];
+      const selectedPlace = getPlace(selectedPlaceKey);
+      if (selectedPlace) {
+        panel.append(createPlaceChip(selectedPlaceKey, { active: true }));
+      } else {
+        const empty = document.createElement("div");
+        empty.className = "current-place-empty";
+        empty.textContent = "尚未設定";
+        panel.append(empty);
+      }
+
+      return panel;
+    }
+
+    function createLibraryChip(placeKey, place) {
+      const button = document.createElement("button");
+      button.className = "place-library-chip";
+      button.type = "button";
+      button.title = activeSlotSelection ? "設為目前位置" : "地點 Chip";
+      button.append(createPlaceChip(placeKey, {
+        active: activeSlotSelection && currentPlaces[activeSlotSelection.day][activeSlotSelection.slotKey] === placeKey,
+        tagName: "span",
+        disableEdit: true,
+        disablePreview: true
+      }));
+      button.addEventListener("click", () => {
+        if (button.dataset.longPress === "true") return;
+        if (activeSlotSelection) {
+          setCurrentPlace(activeSlotSelection.day, activeSlotSelection.slotKey, placeKey);
+        }
+      });
+      attachLongPressEdit(button, placeKey);
+      return button;
+    }
+
+    function renderPlaceLibrary() {
+      placeLibraryStrip.innerHTML = "";
+      allPlaceEntries().forEach(([placeKey, place]) => {
+        placeLibraryStrip.append(createLibraryChip(placeKey, place));
+      });
+      updatePlaceLibrarySubtitle();
+    }
+
+    function createCustomPlaceKey() {
+      return `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function mapsSearchUrl(query) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || "Tokyo")}`;
+    }
+
+    function renderSlots() {
+      document.querySelectorAll(".slots").forEach((container) => {
+        const day = container.dataset.day;
+        container.innerHTML = "";
+
+        SLOT_LABELS.forEach((slot) => {
+          const card = document.createElement("section");
+          card.className = "slot";
+
+          const head = document.createElement("div");
+          head.className = "slot-head";
+          head.innerHTML = `<div class="slot-name">${slot.name}</div><div class="slot-time">${slot.time}</div>`;
+
+          const textarea = document.createElement("textarea");
+          textarea.value = state[day][slot.key] || "";
+          textarea.placeholder = `填入 ${state[day].label} ${slot.name} 行程`;
+          textarea.setAttribute("aria-label", `${state[day].label} ${slot.name}`);
+          textarea.dataset.day = day;
+          textarea.dataset.slot = slot.key;
+          textarea.addEventListener("input", (event) => {
+            state[event.target.dataset.day][event.target.dataset.slot] = event.target.value;
+            autoResizeTextarea(event.target);
+            saveStateToStorage();
+          });
+
+          const currentPlacePanel = createCurrentPlacePanel(day, slot);
+
+          const placeStrip = document.createElement("div");
+          placeStrip.className = "place-strip";
+          const assignedPlaces = slotPlaces[day][slot.key] || [];
+          assignedPlaces.forEach((placeKey) => placeStrip.append(createPlaceChip(placeKey)));
+          if (assignedPlaces.length > 4) {
+            placeStrip.classList.add("collapsed");
+            placeStrip.append(createPlacesToggle(placeStrip, assignedPlaces.length - 4));
+          }
+
+          const foot = document.createElement("div");
+          foot.className = "slot-foot";
+          foot.innerHTML = `<span>${assignedPlaces.length} places</span><span>${slot.name}</span>`;
+
+          card.append(head, textarea, currentPlacePanel, placeStrip, foot);
+          container.append(card);
+          requestAnimationFrame(() => autoResizeTextarea(textarea));
+        });
+      });
+    }
+
+    function goToSlide(index) {
+      currentIndex = Math.max(0, Math.min(3, index));
+      track.style.transform = `translateX(-${currentIndex * 25}%)`;
+
+      tabs.forEach((tab, idx) => {
+        tab.classList.toggle("active", idx === currentIndex);
+        tab.setAttribute("aria-current", idx === currentIndex ? "page" : "false");
+      });
+      dots.forEach((dot, idx) => dot.classList.toggle("active", idx === currentIndex));
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify({ itinerary: state, customPlaces, currentPlaces, placeNameOverrides }, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "tokyo_daily_itinerary.json";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      showToast("已匯出目前編輯內容");
+    }
+
+    function resetToInitial() {
+      state = cloneInitialData();
+      customPlaces = {};
+      currentPlaces = buildDefaultCurrentPlaces();
+      placeNameOverrides = {};
+      activeSlotSelection = null;
+      saveStateToStorage();
+      renderSlots();
+      renderPlaceLibrary();
+      showToast("已還原成 Excel 初始內容");
+    }
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => goToSlide(Number(tab.dataset.index))));
+    dots.forEach((dot) => dot.addEventListener("click", () => goToSlide(Number(dot.dataset.index))));
+
+    document.getElementById("prevBtn").addEventListener("click", () => goToSlide(currentIndex - 1));
+    document.getElementById("nextBtn").addEventListener("click", () => goToSlide(currentIndex + 1));
+    document.getElementById("exportBtn").addEventListener("click", exportJson);
+    document.getElementById("resetBtn").addEventListener("click", resetToInitial);
+    newPlaceName.addEventListener("input", () => {
+      openMapsSearch.href = mapsSearchUrl(newPlaceName.value.trim());
+    });
+    addPlaceForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = newPlaceName.value.trim();
+      const url = newPlaceUrl.value.trim();
+      const category = newPlaceCategory.value;
+      if (!name) {
+        showToast("請先輸入地點名稱");
+        newPlaceName.focus();
+        return;
+      }
+      const placeUrl = url || mapsSearchUrl(name);
+      const key = createCustomPlaceKey();
+      customPlaces[key] = {
+        name,
+        category,
+        query: name,
+        url: placeUrl
+      };
+      saveStateToStorage();
+      addPlaceForm.reset();
+      openMapsSearch.href = mapsSearchUrl("Tokyo");
+      renderPlaceLibrary();
+      showToast("已新增地點 Chip");
+    });
+    mapPreview.addEventListener("mouseenter", () => window.clearTimeout(previewTimer));
+    mapPreview.addEventListener("mouseleave", scheduleHideMapPreview);
+    mapPreviewClose.addEventListener("click", hideMapPreview);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.target && event.target.tagName === "TEXTAREA") return;
+      if (event.key === "Escape") hideMapPreview();
+      if (event.key === "ArrowLeft") goToSlide(currentIndex - 1);
+      if (event.key === "ArrowRight") goToSlide(currentIndex + 1);
+    });
+
+    renderSlots();
+    renderPlaceLibrary();
+    setBackdropMap(OVERVIEW_MAP_QUERY, true);
+    setInitialSideMap();
+    goToSlide(0);
+  </script>
+</body>
+</html>

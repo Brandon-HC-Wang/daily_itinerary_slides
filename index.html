@@ -485,6 +485,13 @@
       display: none;
     }
 
+    .slot-place-item {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      gap: 4px;
+    }
+
     .place-chip {
       display: inline-flex;
       align-items: center;
@@ -592,6 +599,29 @@
       outline: none;
     }
 
+    .remove-place {
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .remove-place:hover,
+    .remove-place:focus-visible {
+      border-color: rgba(239, 68, 68, 0.42);
+      background: #fef2f2;
+      color: #b91c1c;
+      outline: none;
+    }
+
     .current-place {
       display: grid;
       gap: 8px;
@@ -623,6 +653,25 @@
 
     .current-place-action:hover,
     .current-place-action:focus-visible {
+      border-color: rgba(249, 115, 22, 0.48);
+      background: var(--accent-soft);
+      color: #9a3412;
+      outline: none;
+    }
+
+    .slot-list-action {
+      min-height: 28px;
+      padding: 0 8px;
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--primary-dark);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .slot-list-action:hover,
+    .slot-list-action:focus-visible {
       border-color: rgba(249, 115, 22, 0.48);
       background: var(--accent-soft);
       color: #9a3412;
@@ -1385,9 +1434,10 @@
     let customPlaces = appState.customPlaces;
     let currentPlaces = appState.currentPlaces;
     let placeNameOverrides = appState.placeNameOverrides;
+    let editableSlotPlaces = appState.slotPlaces;
     let dirtySlots = appState.dirtySlots;
     let currentIndex = 0;
-    let activeSlotSelection = null;
+    let activePlaceSelection = null;
 
     const track = document.getElementById("track");
     const tabs = Array.from(document.querySelectorAll(".tab"));
@@ -1436,6 +1486,18 @@
       return defaults;
     }
 
+    function cloneInitialSlotPlaces() {
+      return JSON.parse(JSON.stringify(slotPlaces));
+    }
+
+    function mergeSlotPlaces(savedSlotPlaces = {}) {
+      const defaults = cloneInitialSlotPlaces();
+      Object.keys(defaults).forEach((day) => {
+        defaults[day] = { ...defaults[day], ...(savedSlotPlaces[day] || {}) };
+      });
+      return defaults;
+    }
+
     function mergeCurrentPlaces(savedCurrentPlaces = {}) {
       const defaults = buildDefaultCurrentPlaces();
       Object.keys(defaults).forEach((day) => {
@@ -1451,6 +1513,7 @@
         customPlaces: {},
         currentPlaces: buildDefaultCurrentPlaces(),
         placeNameOverrides: {},
+        slotPlaces: cloneInitialSlotPlaces(),
         dirtySlots: {}
       };
       if (!raw) return fallback;
@@ -1463,6 +1526,7 @@
           customPlaces: isStructured ? parsed.customPlaces || {} : {},
           currentPlaces: mergeCurrentPlaces(isStructured ? parsed.currentPlaces || {} : {}),
           placeNameOverrides: isStructured ? parsed.placeNameOverrides || {} : {},
+          slotPlaces: mergeSlotPlaces(isStructured ? parsed.slotPlaces || {} : {}),
           dirtySlots: isStructured ? parsed.dirtySlots || {} : {}
         };
       } catch {
@@ -1471,7 +1535,7 @@
     }
 
     function saveStateToStorage() {
-      appState = { itinerary: state, customPlaces, currentPlaces, placeNameOverrides, dirtySlots };
+      appState = { itinerary: state, customPlaces, currentPlaces, placeNameOverrides, slotPlaces: editableSlotPlaces, dirtySlots };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       const time = new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
       saveState.innerHTML = `Saved <strong>${time}</strong>`;
@@ -1759,19 +1823,20 @@
 
     function updatePlaceLibrarySubtitle() {
       const count = allPlaceEntries().length;
-      if (activeSlotSelection) {
-        const dayLabel = state[activeSlotSelection.day].label;
-        const slotLabel = SLOT_LABELS.find((slot) => slot.key === activeSlotSelection.slotKey).name;
-        placeLibrarySubtitle.textContent = `正在選擇 ${dayLabel} ${slotLabel} 的目前位置。點下方任一 Chip 即可套用。`;
+      if (activePlaceSelection) {
+        const dayLabel = state[activePlaceSelection.day].label;
+        const slotLabel = SLOT_LABELS.find((slot) => slot.key === activePlaceSelection.slotKey).name;
+        const action = activePlaceSelection.mode === "current" ? "目前位置" : "地點清單";
+        placeLibrarySubtitle.textContent = `正在選擇 ${dayLabel} ${slotLabel} 的${action}。點下方任一 Chip 即可套用。`;
         placeLibrary.classList.add("selecting");
         return;
       }
-      placeLibrarySubtitle.textContent = `目前共有 ${count} 個地點。按「從總表選擇」後，再點這裡的 Chip 設為該時段目前位置。`;
+      placeLibrarySubtitle.textContent = `目前共有 ${count} 個地點。請先在時段內按「從總表選擇」或「新增地點」，再點這裡的 Chip。`;
       placeLibrary.classList.remove("selecting");
     }
 
-    function setActiveSlotSelection(day, slotKey) {
-      activeSlotSelection = { day, slotKey };
+    function setActivePlaceSelection(mode, day, slotKey) {
+      activePlaceSelection = { mode, day, slotKey };
       renderSlots();
       renderPlaceLibrary();
       placeLibrary.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1780,11 +1845,33 @@
     function setCurrentPlace(day, slotKey, placeKey) {
       if (!getPlace(placeKey)) return;
       currentPlaces[day][slotKey] = placeKey;
-      activeSlotSelection = null;
+      activePlaceSelection = null;
       saveStateToStorage();
       renderSlots();
       renderPlaceLibrary();
       showToast("已設定目前位置");
+    }
+
+    function addSlotPlace(day, slotKey, placeKey) {
+      if (!getPlace(placeKey)) return;
+      const placesForSlot = editableSlotPlaces[day][slotKey] || [];
+      if (!placesForSlot.includes(placeKey)) {
+        editableSlotPlaces[day][slotKey] = [...placesForSlot, placeKey];
+        saveStateToStorage();
+        showToast("已新增到時段地點清單");
+      } else {
+        showToast("此地點已在清單中");
+      }
+      activePlaceSelection = null;
+      renderSlots();
+      renderPlaceLibrary();
+    }
+
+    function removeSlotPlace(day, slotKey, placeKey) {
+      editableSlotPlaces[day][slotKey] = (editableSlotPlaces[day][slotKey] || []).filter((item) => item !== placeKey);
+      saveStateToStorage();
+      renderSlots();
+      showToast("已從時段地點清單移除");
     }
 
     function createCurrentPlacePanel(day, slot) {
@@ -1800,8 +1887,8 @@
       const action = document.createElement("button");
       action.className = "current-place-action";
       action.type = "button";
-      action.textContent = activeSlotSelection && activeSlotSelection.day === day && activeSlotSelection.slotKey === slot.key ? "選擇中" : "從總表選擇";
-      action.addEventListener("click", () => setActiveSlotSelection(day, slot.key));
+      action.textContent = activePlaceSelection && activePlaceSelection.mode === "current" && activePlaceSelection.day === day && activePlaceSelection.slotKey === slot.key ? "選擇中" : "從總表選擇";
+      action.addEventListener("click", () => setActivePlaceSelection("current", day, slot.key));
 
       head.append(label, action);
       panel.append(head);
@@ -1820,21 +1907,42 @@
       return panel;
     }
 
+    function createSlotPlaceItem(day, slotKey, placeKey) {
+      const item = document.createElement("span");
+      item.className = "slot-place-item";
+      item.append(createPlaceChip(placeKey));
+
+      const remove = document.createElement("button");
+      remove.className = "remove-place";
+      remove.type = "button";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", "移除此地點");
+      remove.addEventListener("click", () => removeSlotPlace(day, slotKey, placeKey));
+
+      item.append(remove);
+      return item;
+    }
+
     function createLibraryChip(placeKey, place) {
       const button = document.createElement("button");
       button.className = "place-library-chip";
       button.type = "button";
-      button.title = activeSlotSelection ? "設為目前位置" : "地點 Chip";
+      button.title = activePlaceSelection ? "套用到目前選擇" : "地點 Chip";
       button.append(createPlaceChip(placeKey, {
-        active: activeSlotSelection && currentPlaces[activeSlotSelection.day][activeSlotSelection.slotKey] === placeKey,
+        active: activePlaceSelection && activePlaceSelection.mode === "current" && currentPlaces[activePlaceSelection.day][activePlaceSelection.slotKey] === placeKey,
         tagName: "span",
         disableEdit: true,
         disablePreview: true
       }));
       button.addEventListener("click", () => {
         if (button.dataset.longPress === "true") return;
-        if (activeSlotSelection) {
-          setCurrentPlace(activeSlotSelection.day, activeSlotSelection.slotKey, placeKey);
+        if (!activePlaceSelection) return;
+        if (activePlaceSelection.mode === "current") {
+          setCurrentPlace(activePlaceSelection.day, activePlaceSelection.slotKey, placeKey);
+          return;
+        }
+        if (activePlaceSelection.mode === "slot-list") {
+          addSlotPlace(activePlaceSelection.day, activePlaceSelection.slotKey, placeKey);
         }
       });
       attachLongPressEdit(button, placeKey);
@@ -1990,8 +2098,8 @@
 
           const placeStrip = document.createElement("div");
           placeStrip.className = "place-strip";
-          const assignedPlaces = slotPlaces[day][slot.key] || [];
-          assignedPlaces.forEach((placeKey) => placeStrip.append(createPlaceChip(placeKey)));
+          const assignedPlaces = editableSlotPlaces[day][slot.key] || [];
+          assignedPlaces.forEach((placeKey) => placeStrip.append(createSlotPlaceItem(day, slot.key, placeKey)));
           if (assignedPlaces.length > 4) {
             placeStrip.classList.add("collapsed");
             placeStrip.append(createPlacesToggle(placeStrip, assignedPlaces.length - 4));
@@ -1999,7 +2107,16 @@
 
           const foot = document.createElement("div");
           foot.className = "slot-foot";
-          foot.innerHTML = `<span>${assignedPlaces.length} places</span><span>${slot.name}</span>`;
+          const count = document.createElement("span");
+          count.textContent = `${assignedPlaces.length} places`;
+
+          const addPlace = document.createElement("button");
+          addPlace.className = "slot-list-action";
+          addPlace.type = "button";
+          addPlace.textContent = activePlaceSelection && activePlaceSelection.mode === "slot-list" && activePlaceSelection.day === day && activePlaceSelection.slotKey === slot.key ? "選擇中" : "新增地點";
+          addPlace.addEventListener("click", () => setActivePlaceSelection("slot-list", day, slot.key));
+
+          foot.append(count, addPlace);
 
           card.append(head, textarea, currentPlacePanel, placeStrip, foot);
           container.append(card);
@@ -2024,8 +2141,9 @@
       customPlaces = {};
       currentPlaces = buildDefaultCurrentPlaces();
       placeNameOverrides = {};
+      editableSlotPlaces = cloneInitialSlotPlaces();
       dirtySlots = {};
-      activeSlotSelection = null;
+      activePlaceSelection = null;
       saveStateToStorage();
       renderSlots();
       renderPlaceLibrary();
